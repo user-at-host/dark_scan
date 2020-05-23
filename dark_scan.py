@@ -1,14 +1,19 @@
 #!/usr/bin/python3
 '''
 TODO:
-	- Translate URLs to IP address.
+	- Add resolve host option
+	- Parse port ranges
+	- Add ETA
 DONE:
 	- Add host discovery on local network.
 	- Add argument parsing.
+	- Resolve URLs to IP address.
 '''
 
+from re import search
 from sys import argv
 from random import randint
+from socket import gethostbyname
 from scapy.all import *
 
 TIMEOUT = 2
@@ -57,7 +62,7 @@ def parse_arguments():
 
 
 def print_help():
-	print("Usage: dark_scan [OPTIONS]...\n")
+	print("Usage: dark_scan.py [OPTIONS]...\n")
 	print("\t-d\t<IP address range>\tHost discovery")
 	print("\t-t\t<IP address>\t\tHost to scan")
 	print("\t-p\t<Ports>\t\t\tPorts to scan")
@@ -81,22 +86,27 @@ def tcp_syn_scan(target, ports):
 	scanned_ports = 0
 	ip = IP(dst = target)
 	
-	print("Scaning %d ports\n" % (len(ports)))
+	print("Scaning %s\n" % (target))
 
-	for port in ports:
+	for i in range(0, len(ports)):
 		s_port = randint(49152, 65535)
 
-		ans = sr1(ip/TCP(dport = port, sport = s_port), timeout = TIMEOUT, verbose = 0)
+		ans = sr1(ip/TCP(dport = ports[i], sport = s_port), timeout = TIMEOUT, verbose = 0)
 
 		print_percent(scanned_ports, len(ports))
 
-		if ans.haslayer(TCP):
-			if ans[TCP].flags == 20:
-				pass
-	#			print(i, "Closed")
-			elif ans[TCP].flags == 18:
-	#			print(i, "Open")
-				open_ports.append(port)
+		try:
+			if ans.haslayer(TCP):
+				if ans[TCP].flags == 20:
+					pass
+		#			print(i, "Closed")
+				elif ans[TCP].flags == 18:
+		#			print(i, "Open")
+					open_ports.append(ports[i])
+		except AttributeError:
+			i -= 1
+
+			continue
 
 		scanned_ports += 1
 
@@ -116,13 +126,41 @@ def print_results(open_ports, protocol):
 	print("\nFound %d open ports" % (len(open_ports)))
 
 
+def check_address(address):
+	pattern = "^[0-9]{1,3}\\."
+
+	if search(pattern, address):
+		return address
+	else:
+		address = resolve_address(address)
+
+		return address
+
+
+def resolve_address(url):
+	print("Resolving: %s" % (url))
+
+	pattern = "^http[s]?://"
+
+	if search(pattern, url):
+		url = url.split('//')[1]
+
+	pattern = "\\.*/"
+
+	if search(pattern, url):
+		url = url.split('/')[0]
+	
+	return gethostbyname(url)
+
+
 def main():
 	args = parse_arguments()
 
 	if "h_discover" in args:
 		host_discovery(args["target"])
 	else:
-		target = args["target"]
+		target = check_address(args["target"])
+
 		ports = list(range(1, args["port"]))
 
 		print_results(tcp_syn_scan(target, ports), "TCP")
