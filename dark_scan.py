@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 '''
 TODO:
-	- Add resolve host option
-	- Parse port ranges
 	- Add ETA
 DONE:
 	- Add host discovery on local network.
 	- Add argument parsing.
 	- Resolve URLs to IP address.
+	- Parse port ranges
+	- Add resolve host option
 '''
 
 from re import search
@@ -47,9 +47,15 @@ def parse_arguments():
 
 			skip = 1
 		elif argv[i] == '-p':
-			args["port"] = int(argv[i + 1])
+			args["port"] = parse_ports(argv[i + 1])
 
 			skip = 1
+		elif argv[i] == '-r':
+			args["resolve"] = True
+
+			args["target"] = argv[i + 1]
+
+			skip = 1			
 		else:
 			print("Unknown option: %s" % (argv[i]))
 
@@ -61,11 +67,22 @@ def parse_arguments():
 	return args
 
 
+def parse_ports(ports):
+	if '-' in ports:
+		ports = list(range(int(ports.split('-')[0]), int(ports.split('-')[1]) + 1))
+
+		return ports
+	else:
+		return [int(ports)]
+
+
 def print_help():
 	print("Usage: dark_scan.py [OPTIONS]...\n")
 	print("\t-d\t<IP address range>\tHost discovery")
 	print("\t-t\t<IP address>\t\tHost to scan")
 	print("\t-p\t<Ports>\t\t\tPorts to scan")
+	print("\t-r\t<Host>\t\t\tResolve host")
+	print()
 
 
 def host_discovery(target):
@@ -158,10 +175,13 @@ def main():
 
 	if "h_discover" in args:
 		host_discovery(args["target"])
+	elif "resolve" in args:
+		address = resolve_address(args["target"])
+		print("Address: %s" % (address))
 	else:
 		target = check_address(args["target"])
 
-		ports = list(range(1, args["port"]))
+		ports = args["port"]
 
 		print_results(tcp_syn_scan(target, ports), "TCP")
 
