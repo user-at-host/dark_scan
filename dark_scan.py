@@ -1,38 +1,79 @@
 #!/usr/bin/python3
 '''
 TODO:
-	- Add host discovery on local network.
+	- Translate URLs to IP address.
 DONE:
+	- Add host discovery on local network.
 	- Add argument parsing.
 '''
 
-import argparse
 from sys import argv
 from random import randint
 from scapy.all import *
 
-timeout = 2
+TIMEOUT = 2
 
 def parse_arguments():
-	arguments = argparse.ArgumentParser()
+	args = {}
+	skip = 0
 
-	arguments.add_argument("-p", "--ports", type = int, help = "Target port/s")
-	arguments.add_argument("-t", "--target", type = str, required = True, help = "Target address")
-	arguments.add_argument("-d", "--discover", help = "Host discovery")
+	if len(argv) == 1:
+		print_help()
 
-	return arguments.parse_args()
+		exit()
+
+	for i in range(1, len(argv)):
+		if skip:
+			skip = 0
+			continue
+
+		if argv[i] == '-h':
+			print_help()
+			
+			exit()
+		elif argv[i] == '-d':
+			args["h_discover"] = True
+
+			args["target"] = argv[i + 1]
+
+			skip = 1
+		elif argv[i] == '-t':
+			args["target"] = argv[i + 1]
+
+			skip = 1
+		elif argv[i] == '-p':
+			args["port"] = int(argv[i + 1])
+
+			skip = 1
+		else:
+			print("Unknown option: %s" % (argv[i]))
+
+			print_help()
+
+			exit()
+
+
+	return args
+
+
+def print_help():
+	print("Usage: dark_scan [OPTIONS]...\n")
+	print("\t-d\t<IP address range>\tHost discovery")
+	print("\t-t\t<IP address>\t\tHost to scan")
+	print("\t-p\t<Ports>\t\t\tPorts to scan")
 
 
 def host_discovery(target):
 	live_hosts = []
-	ans, unans = srp(Ether(dst = "ff:ff:ff:ff:ff:ff")/ARP(pdst = target), timeout = timeout, verbose = 0)
+	ans, unans = srp(Ether(dst = "ff:ff:ff:ff:ff:ff")/ARP(pdst = target), timeout = TIMEOUT, verbose = 0)
 
 	for snd, rcv in ans:
-		live_hosts = rcv.pasrc
-#		print(rcv.psrc)
+		live_hosts.append(rcv.psrc)
 
 	for host in live_hosts:
-		print("Host %s is up\n" % (host))
+		print("Host: %s is up" % (host))
+
+	print()
 
 
 def tcp_syn_scan(target, ports):
@@ -45,7 +86,7 @@ def tcp_syn_scan(target, ports):
 	for port in ports:
 		s_port = randint(49152, 65535)
 
-		ans = sr1(ip/TCP(dport = port, sport = s_port), timeout = timeout, verbose = 0)
+		ans = sr1(ip/TCP(dport = port, sport = s_port), timeout = TIMEOUT, verbose = 0)
 
 		print_percent(scanned_ports, len(ports))
 
@@ -66,11 +107,11 @@ def print_percent(counter, total_ports):
 	print("\rCompleted: %d%%" % (counter * 100 / total_ports), end = '')
 
 
-def print_results(open_ports):
+def print_results(open_ports, protocol):
 	print('\r', ' ' * 20, '\r', end = '')
 
 	for i in open_ports:
-		print("Port %d open" % (i))
+		print("Port %d open %s" % (i, protocol))
 
 	print("\nFound %d open ports" % (len(open_ports)))
 
@@ -78,17 +119,13 @@ def print_results(open_ports):
 def main():
 	args = parse_arguments()
 
-	if args.ports is not None:
-		ports = list(range(1, args.ports))
+	if "h_discover" in args:
+		host_discovery(args["target"])
+	else:
+		target = args["target"]
+		ports = list(range(1, args["port"]))
 
-	target = args.target
-
-	if args.discover is not None:
-		host_discovery(target)
-
-	open_ports = tcp_syn_scan(target, ports)
-
-	print_results(open_ports)
+		print_results(tcp_syn_scan(target, ports), "TCP")
 
 
 if __name__ == "__main__":
