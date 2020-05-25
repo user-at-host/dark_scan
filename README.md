@@ -1,7 +1,7 @@
 # dark_scan
 WORK IN PROGRESS
 
-A port scanner that can use the Tor network to scan target hosts. (The TOR functionality is not yet written)
+A port scanner that can use the Tor network to scan target hosts. (The TOR functionality is notwritten yet)
 
 	Usage: dark_scan.py [OPTIONS]...
 
