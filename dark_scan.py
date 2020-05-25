@@ -1,13 +1,18 @@
 #!/usr/bin/python3
 '''
 TODO:
+	- Add scanning using TOR
 	- Add ETA
+	- Add banner grabbing
+	- Add OS discovery
+	- Add check for valid IP addresses
 DONE:
 	- Add host discovery on local network.
 	- Add argument parsing.
 	- Resolve URLs to IP address.
 	- Parse port ranges
 	- Add resolve host option
+	- Improve speed
 '''
 
 from re import search
@@ -17,6 +22,7 @@ from socket import gethostbyname
 from scapy.all import *
 
 TIMEOUT = 2
+BLOCK_SIZE = 100
 
 def parse_arguments():
 	args = {}
@@ -78,16 +84,18 @@ def parse_ports(ports):
 
 def print_help():
 	print("Usage: dark_scan.py [OPTIONS]...\n")
-	print("\t-d\t<IP address range>\tHost discovery")
-	print("\t-t\t<IP address>\t\tHost to scan")
+	print("\t-d\t<IP address/CIDR>\tHost discovery")
+	print("\t-t\t<IP address>\t\tTarget")
 	print("\t-p\t<Ports>\t\t\tPorts to scan")
-	print("\t-r\t<Host>\t\t\tResolve host")
+	print("\t-r\t<URL>\t\t\tResolve host")
 	print()
 
 
 def host_discovery(target):
 	live_hosts = []
 	ans, unans = srp(Ether(dst = "ff:ff:ff:ff:ff:ff")/ARP(pdst = target), timeout = TIMEOUT, verbose = 0)
+
+	print("Discovering hosts on %s network\n" % (target))
 
 	for snd, rcv in ans:
 		live_hosts.append(rcv.psrc)
@@ -101,6 +109,41 @@ def host_discovery(target):
 def tcp_syn_scan(target, ports):
 	open_ports = []
 	scanned_ports = 0
+	sport = randint(49152, 65535)
+	print("Scaning target: %s\n" % (target))
+
+	if len(ports) > 1:
+		port_chunks = generate_port_chunks(ports)
+
+	for i in port_chunks:
+		ans, unans = sr(IP(dst = target)/TCP(sport = sport, dport = ports[i[0]:i[1]]), timeout = TIMEOUT, verbose = 0)#, inter = 0.01)
+
+		for snd, rcv in ans:
+			scanned_ports += 1
+			if rcv.haslayer(TCP):
+				tcp_layer = rcv.getlayer(TCP)
+
+				if tcp_layer.flags == 20:
+						pass
+				elif tcp_layer.flags == 18:
+					open_ports.append(tcp_layer.sport)
+
+	return open_ports, scanned_ports
+
+
+def generate_port_chunks(ports):
+	port_chunks = []
+
+	for i in range(0, len(ports), 200):
+		port_chunks.append([i, i + 200])
+
+	return port_chunks
+
+
+'''
+def tcp_syn_scan(target, ports):
+	open_ports = []
+	scanned_ports = 0
 	ip = IP(dst = target)
 	
 	print("Scaning %s\n" % (target))
@@ -108,7 +151,7 @@ def tcp_syn_scan(target, ports):
 	for i in range(0, len(ports)):
 		s_port = randint(49152, 65535)
 
-		ans = sr1(ip/TCP(dport = ports[i], sport = s_port), timeout = TIMEOUT, verbose = 0)
+		ans = sr1(ip/TCP(dport = ports[i], sport = s_port), timeout = TIMEOUT, verbose = 0, inter = 0.001)
 
 		print_percent(scanned_ports, len(ports))
 
@@ -128,19 +171,20 @@ def tcp_syn_scan(target, ports):
 		scanned_ports += 1
 
 	return open_ports
-
+'''
 
 def print_percent(counter, total_ports):
 	print("\rCompleted: %d%%" % (counter * 100 / total_ports), end = '')
 
 
-def print_results(open_ports, protocol):
+def print_results(open_ports, scanned_ports, protocol):
 	print('\r', ' ' * 20, '\r', end = '')
 
 	for i in open_ports:
 		print("Port %d open %s" % (i, protocol))
 
-	print("\nFound %d open ports" % (len(open_ports)))
+	print("\nScanned %d ports" % (scanned_ports))
+	print("Found %d open ports" % (len(open_ports)))
 
 
 def check_address(address):
@@ -183,7 +227,8 @@ def main():
 
 		ports = args["port"]
 
-		print_results(tcp_syn_scan(target, ports), "TCP")
+		open_ports, scanned_ports = tcp_syn_scan(target, ports)
+		print_results(open_ports, scanned_ports, "TCP")
 
 
 if __name__ == "__main__":
