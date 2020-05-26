@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 '''
 TODO:
-	- Add scanning using TOR
 	- Add ETA
 	- Add banner grabbing
 	- Add OS discovery
@@ -13,8 +12,11 @@ DONE:
 	- Parse port ranges
 	- Add resolve host option
 	- Improve speed
+	- Add scanning using TOR
 '''
 
+import socks
+import socket
 from re import search
 from sys import argv
 from random import randint
@@ -37,6 +39,8 @@ def parse_arguments():
 		if skip:
 			skip = 0
 			continue
+
+		args["tor_scan"] = True
 
 		if argv[i] == '-h':
 			print_help()
@@ -61,7 +65,9 @@ def parse_arguments():
 
 			args["target"] = argv[i + 1]
 
-			skip = 1			
+			skip = 1
+		elif argv[i] == '-nt':
+			args["tor_scan"] = False
 		else:
 			print("Unknown option: %s" % (argv[i]))
 
@@ -84,10 +90,15 @@ def parse_ports(ports):
 
 def print_help():
 	print("Usage: dark_scan.py [OPTIONS]...\n")
-	print("\t-d\t<IP address/CIDR>\tHost discovery")
-	print("\t-t\t<IP address>\t\tTarget")
+	print("\t-d\t<IP address/CIDR>\tHost discovery on local network")
+	print("\t-t\t<IP address/URL>\tTarget")
 	print("\t-p\t<Ports>\t\t\tPorts to scan")
 	print("\t-r\t<URL>\t\t\tResolve host")
+	print("\t-nt\t\t\t\tDo not use Tor network (regular TCP SYN scan)")
+	print("\n\tExamples:")
+	print("\t\t./dark_scan.py -t 45.33.32.156 -p 1-1023")
+	print("\t\t./dark_scan.py -r scanme.nmap.org")
+	print("\t\t./dark_scan.py -d 192.168.1.1/24")
 	print()
 
 
@@ -110,13 +121,17 @@ def tcp_syn_scan(target, ports):
 	open_ports = []
 	scanned_ports = 0
 	sport = randint(49152, 65535)
-	print("Scaning target: %s\n" % (target))
+#	print("Scaning target: %s\n" % (target))
 
 	if len(ports) > 1:
 		port_chunks = generate_port_chunks(ports)
+	else:
+		port_chunks = [[0, 1]]
 
 	for i in port_chunks:
-		ans, unans = sr(IP(dst = target)/TCP(sport = sport, dport = ports[i[0]:i[1]]), timeout = TIMEOUT, verbose = 0)#, inter = 0.01)
+		ip = IP(dst = target)
+		tcp = TCP(sport = sport, dport = ports[i[0]:i[1]])
+		ans, unans = sr(ip/tcp, timeout = TIMEOUT, verbose = 0)
 
 		for snd, rcv in ans:
 			scanned_ports += 1
@@ -140,6 +155,26 @@ def generate_port_chunks(ports):
 	return port_chunks
 
 
+def tor_scan(target, ports):
+	open_ports = []
+	scanned_ports = 0
+
+	socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 9050, True)
+
+	for port in ports:
+		try:
+			s = socks.socksocket()
+
+			scanned_ports += 1
+
+			s.connect((target, port))
+			s.close()
+
+			open_ports.append(port)
+		except socks.GeneralProxyError:
+			pass
+
+	return open_ports, scanned_ports
 '''
 def tcp_syn_scan(target, ports):
 	open_ports = []
@@ -223,11 +258,16 @@ def main():
 		address = resolve_address(args["target"])
 		print("Address: %s" % (address))
 	else:
-		target = check_address(args["target"])
-
 		ports = args["port"]
+		target = check_address(args["target"]) 
 
-		open_ports, scanned_ports = tcp_syn_scan(target, ports)
+		print("Scaning target: %s\n" % (target))
+
+		if args["tor_scan"]:
+			open_ports, scanned_ports = tor_scan(target, ports)
+		else:
+			open_ports, scanned_ports = tcp_syn_scan(target, ports)
+
 		print_results(open_ports, scanned_ports, "TCP")
 
 
