@@ -20,4 +20,4 @@ Execute as root/sudo.
                 ./dark_scan.py -r scanme.nmap.org
                 ./dark_scan.py -d 192.168.1.1/24
 
-Tested ok Kali.
+Tested on Kali.
