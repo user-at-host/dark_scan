@@ -13,6 +13,7 @@ A port scanner that uses the Tor network to scan target hosts.
 
         Examples:
                 ./dark_scan.py -t 45.33.32.156 -p 1-1023
+                ./dark_scan.py -t 45.33.32.156 -p 22
                 ./dark_scan.py -r scanme.nmap.org
                 ./dark_scan.py -d 192.168.1.1/24
 
