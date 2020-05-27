@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 '''
 TODO:
+	- Add check for valid IP addresses
+	- Add check for local network scanning
+	- Add check for Tor service (installed and running)
 	- Add ETA
 	- Add banner grabbing
 	- Add OS discovery
-	- Add check for valid IP addresses
 DONE:
 	- Add host discovery on local network.
 	- Add argument parsing.
@@ -121,7 +123,6 @@ def tcp_syn_scan(target, ports):
 	open_ports = []
 	scanned_ports = 0
 	sport = randint(49152, 65535)
-#	print("Scaning target: %s\n" % (target))
 
 	if len(ports) > 1:
 		port_chunks = generate_port_chunks(ports)
@@ -175,38 +176,7 @@ def tor_scan(target, ports):
 			pass
 
 	return open_ports, scanned_ports
-'''
-def tcp_syn_scan(target, ports):
-	open_ports = []
-	scanned_ports = 0
-	ip = IP(dst = target)
-	
-	print("Scaning %s\n" % (target))
 
-	for i in range(0, len(ports)):
-		s_port = randint(49152, 65535)
-
-		ans = sr1(ip/TCP(dport = ports[i], sport = s_port), timeout = TIMEOUT, verbose = 0, inter = 0.001)
-
-		print_percent(scanned_ports, len(ports))
-
-		try:
-			if ans.haslayer(TCP):
-				if ans[TCP].flags == 20:
-					pass
-		#			print(i, "Closed")
-				elif ans[TCP].flags == 18:
-		#			print(i, "Open")
-					open_ports.append(ports[i])
-		except AttributeError:
-			i -= 1
-
-			continue
-
-		scanned_ports += 1
-
-	return open_ports
-'''
 
 def print_percent(counter, total_ports):
 	print("\rCompleted: %d%%" % (counter * 100 / total_ports), end = '')
