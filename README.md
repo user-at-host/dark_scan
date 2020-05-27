@@ -2,6 +2,9 @@
 WORK IN PROGRESS
 
 A port scanner that uses the Tor network to scan target hosts.
+Make sure that the Tor service is running and listening on 172.0.0.1:9050.
+
+Execute as root/sudo.
 
     Usage: dark_scan.py [OPTIONS]...
 
@@ -17,3 +20,4 @@ A port scanner that uses the Tor network to scan target hosts.
                 ./dark_scan.py -r scanme.nmap.org
                 ./dark_scan.py -d 192.168.1.1/24
 
+Tested ok Kali.
