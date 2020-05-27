@@ -2,7 +2,7 @@
 WORK IN PROGRESS
 
 A port scanner that uses the Tor network to scan target hosts.<br/>
-Make sure that the Tor service is installed.
+Make sure that Tor service is installed.
 
 Execute as root or with sudo.
 
