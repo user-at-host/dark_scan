@@ -9,7 +9,7 @@ Execute as root/sudo.
     Usage: dark_scan.py [OPTIONS]...
 
         -d      <IP address/CIDR>       Host discovery on local network
-        -t      <IP address/URL>        Target
+        -t      <IP address or URL>     Target
         -p      <Ports>                 Ports to scan
         -r      <URL>                   Resolve host
         -nt                             Do not use Tor network (regular TCP SYN scan)
