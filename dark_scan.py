@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 '''
 TODO:
-	- Add check for local network scanning
-	- Add ETA
+	- Add time counter
 	- Add banner grabbing
 	- Add OS discovery
 	- Check if Tor service is installed
@@ -16,11 +15,14 @@ DONE:
 	- Add scanning using TOR
 	- Check if Tor service is running
 	- Add check for valid IP addresses
+	- Check UID
+	- Grab local IPs and interfaces
 '''
 
 import socks
 import socket
 from os import system
+from os import getuid
 from re import search
 from sys import argv
 from time import sleep
@@ -52,16 +54,12 @@ def parse_arguments():
 			print_help()
 			
 			exit()
-		elif argv[i] == '-d':
-			args["h_discover"] = True
-
-			args["target"] = argv[i + 1]
-
-			skip = 1
 		elif argv[i] == '-t':
 			args["target"] = argv[i + 1]
 
 			skip = 1
+		elif argv[i] == '-d':
+			args["discover"] = True
 		elif argv[i] == '-p':
 			args["port"] = parse_ports(argv[i + 1])
 
@@ -72,7 +70,7 @@ def parse_arguments():
 			args["target"] = argv[i + 1]
 
 			skip = 1
-		elif argv[i] == '-nt':
+		elif argv[i] == '-nT':
 			args["tor_scan"] = False
 		else:
 			print("Unknown option: %s" % (argv[i]))
@@ -96,32 +94,43 @@ def parse_ports(ports):
 
 def print_help():
 	print("Usage: dark_scan.py [OPTIONS]...\n")
-	print("\t-d\t<IP address/CIDR>\tHost discovery on local network")
 	print("\t-t\t<IP address/URL>\tTarget")
 	print("\t-p\t<Ports>\t\t\tPorts to scan")
 	print("\t-r\t<URL>\t\t\tResolve host")
-	print("\t-nt\t\t\t\tDo not use Tor network (regular TCP SYN scan)")
+	print("\t-d\t\t\t\tHost discovery on local network")
+	print("\t-nT\t\t\t\tDo not use Tor network (regular TCP SYN scan)")
 	print("\n\tExamples:")
 	print("\t\t./dark_scan.py -t 45.33.32.156 -p 1-1023")
 	print("\t\t./dark_scan.py -t scanme.nmap.org -p 22")
 	print("\t\t./dark_scan.py -r scanme.nmap.org")
-	print("\t\t./dark_scan.py -d 192.168.1.1/24")
+	print("\t\t./dark_scan.py -d")
 	print()
 
 
-def host_discovery(target):
-	live_hosts = []
-	ans, unans = srp(Ether(dst = "ff:ff:ff:ff:ff:ff")/ARP(pdst = target), timeout = TIMEOUT, verbose = 0)
+def host_discovery(ip_addresses, interfaces):
+	for target, iface in zip(ip_addresses, interfaces):
+		live_hosts = []
+		live_mac = []
 
-	print("Discovering hosts on %s network\n" % (target))
+		ans, unans = srp(Ether(dst = "ff:ff:ff:ff:ff:ff")/ARP(pdst = target),iface = iface, timeout = TIMEOUT, verbose = 0)
 
-	for snd, rcv in ans:
-		live_hosts.append(rcv.psrc)
+		print("Discovering hosts on %s network\n" % (target))
 
-	for host in live_hosts:
-		print("Host: %s is up" % (host))
+		for snd, rcv in ans:
+			live_hosts.append(rcv.psrc)
+			live_mac.append(rcv.src)
 
-	print()
+		for host, mac in zip(live_hosts, live_mac):
+			print("IP: %s" % (host), end = '')
+
+			if len(host) < 12:
+				print('\t\t', end = '')
+			else:
+				print('\t', end = '')
+			
+			print("MAC: %s" % (mac))
+
+		print()
 
 
 def tcp_syn_scan(target, ports):
@@ -183,18 +192,21 @@ def tor_scan(target, ports):
 	return open_ports, scanned_ports
 
 
-def print_percent(counter, total_ports):
-	print("\rCompleted: %d%%" % (counter * 100 / total_ports), end = '')
-
-
 def print_results(open_ports, scanned_ports, protocol):
 	print('\r', ' ' * 20, '\r', end = '')
 
 	for i in open_ports:
 		print("Port %d open %s" % (i, protocol))
 
-	print("\nScanned %d ports" % (scanned_ports))
-	print("Found %d open ports" % (len(open_ports)))
+	if scanned_ports == 1:
+		print("\nScanned 1 port")
+	else:
+		print("\nScanned %d ports" % (scanned_ports))
+
+	if len(open_ports) == 1:
+		print("Found 1 open port")
+	else:
+		print("Found %d open ports" % (len(open_ports)))
 
 
 def check_address(address):
@@ -253,7 +265,44 @@ def start_tor_service():
 	return process.returncode
 
 
+def check_uid():
+	if getuid() != 0:
+		return False
+	else:
+		return True
+
+
+def get_local_ip_addresses():
+	output = run(['ip', 'a'], capture_output = True)
+	pattern = "^127\\."
+	pattern_2 = "[0-9]:"
+
+	ip_addresses = []
+	interfaces = []
+	
+	for line in output.stdout.decode().split('\n'):
+		try:
+			if line.split(' ')[4] == 'inet':
+				if not search(pattern, line.split(' ')[5]):
+					ip_addresses.append(line.split(' ')[5])
+		except IndexError:
+			pass
+
+		try:
+			if search(pattern_2, line.split(' ')[0]) and line.split(' ')[1][:-1] != 'lo':
+				interfaces.append(line.split(' ')[1][:-1])
+		except IndexError:
+			pass
+
+	return ip_addresses, interfaces
+
+
 def main():
+	if not check_uid():
+		print("Error: Should be executed as root/sudo")
+
+		exit(1)
+
 	args = parse_arguments()
 
 	if "resolve" in args:
@@ -277,8 +326,9 @@ def main():
 
 				exit(1)
 
-	if "h_discover" in args:
-		host_discovery(args["target"])
+	if "discover" in args:
+		ip_addresses, interfaces = get_local_ip_addresses()
+		host_discovery(ip_addresses, interfaces)
 	else:
 		ports = args["port"]
 		target = check_address(args["target"]) 
