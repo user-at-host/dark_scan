@@ -4,7 +4,7 @@ WORK IN PROGRESS
 A port scanner that uses the Tor network to scan target hosts.<br/>
 Make sure that the Tor service is running and listening on 127.0.0.1:9050.
 
-Execute as root/sudo.
+Execute as root or with sudo.
 
     Usage: dark_scan.py [OPTIONS]...
 
