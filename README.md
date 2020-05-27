@@ -2,6 +2,7 @@
 WORK IN PROGRESS
 
 A port scanner that uses the Tor network to scan target hosts.
+
 Make sure that the Tor service is running and listening on 172.0.0.1:9050.
 
 Execute as root/sudo.
