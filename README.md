@@ -4,7 +4,7 @@ WORK IN PROGRESS
 A port scanner that uses the Tor network to scan target hosts.<br/>
 Make sure that Tor service is installed.
 
-Sequires python 3 and scapy.
+Requires python 3 and scapy.
 
 Tested on Kali.<br/>
 Execute as root or with sudo.
