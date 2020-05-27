@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 '''
 TODO:
-	- Add check for valid IP addresses
 	- Add check for local network scanning
-	- Add check for Tor service (installed and running)
 	- Add ETA
 	- Add banner grabbing
 	- Add OS discovery
+	- Check if Tor service is installed
 DONE:
 	- Add host discovery on local network.
 	- Add argument parsing.
@@ -15,14 +14,19 @@ DONE:
 	- Add resolve host option
 	- Improve speed
 	- Add scanning using TOR
+	- Check if Tor service is running
+	- Add check for valid IP addresses
 '''
 
 import socks
 import socket
+from os import system
 from re import search
 from sys import argv
+from time import sleep
 from random import randint
-from socket import gethostbyname
+from subprocess import run
+from subprocess import PIPE
 from scapy.all import *
 
 TIMEOUT = 2
@@ -99,6 +103,7 @@ def print_help():
 	print("\t-nt\t\t\t\tDo not use Tor network (regular TCP SYN scan)")
 	print("\n\tExamples:")
 	print("\t\t./dark_scan.py -t 45.33.32.156 -p 1-1023")
+	print("\t\t./dark_scan.py -t scanme.nmap.org -p 22")
 	print("\t\t./dark_scan.py -r scanme.nmap.org")
 	print("\t\t./dark_scan.py -d 192.168.1.1/24")
 	print()
@@ -193,10 +198,20 @@ def print_results(open_ports, scanned_ports, protocol):
 
 
 def check_address(address):
-	pattern = "^[0-9]{1,3}\\."
+	pattern = "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$"
 
 	if search(pattern, address):
-		return address
+		pattern = "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
+		pattern += "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
+		pattern += "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
+		pattern += "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+
+		if search(pattern, address):
+			return address
+		else:
+			print("Invalid target: %s" % (address))
+
+			exit(1)
 	else:
 		address = resolve_address(address)
 
@@ -216,17 +231,54 @@ def resolve_address(url):
 	if search(pattern, url):
 		url = url.split('/')[0]
 	
-	return gethostbyname(url)
+	return socket.gethostbyname(url)
+
+
+def check_tor_service():
+	process = run(args = ['service', 'tor', 'status'], stdout = PIPE)
+
+	if process.returncode == 0:
+		return True
+	elif process.returncode == 3:
+		return False
+	else:
+		print("Error: %d" % (process.returncode))
+
+		exit(1)
+
+
+def start_tor_service():
+	process = run(args = ['service', 'tor', 'start'], stdout = PIPE)
+
+	return process.returncode
 
 
 def main():
 	args = parse_arguments()
 
-	if "h_discover" in args:
-		host_discovery(args["target"])
-	elif "resolve" in args:
+	if "resolve" in args:
 		address = resolve_address(args["target"])
 		print("Address: %s" % (address))
+
+		exit(0)
+
+	if args["tor_scan"] and not check_tor_service():
+		ans = input("Tor service is not running, enable it [Y, n]? ")
+
+		if ans.lower() == 'y' or ans == '':
+			ret_code = start_tor_service()
+			if ret_code == 0:
+				sleep(1)
+
+				print("INFO: Tor service started succesfully\n")
+			else:
+				print("Error: Failed to start Tor service.\n\
+					Process exited with return code: %d" % (ret_code))
+
+				exit(1)
+
+	if "h_discover" in args:
+		host_discovery(args["target"])
 	else:
 		ports = args["port"]
 		target = check_address(args["target"]) 
