@@ -3,6 +3,7 @@ WORK IN PROGRESS
 
 A port scanner that uses the Tor network to scan target hosts.<br/>
 Make sure that Tor service is installed.<br/>
+
     apt install tor
 
 Requires python 3 and scapy.
