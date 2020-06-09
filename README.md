@@ -18,12 +18,16 @@ apt update && apt install tor
 ```sh
 git clone https://github.com/gsv-gh/dark_scan.git
 ```
-3. Execute dark_scan.py
+3. Set execution permissions and run the scanner
 ```sh
 cd dark_scan
 
+chmod u+x dark_scan.py
+
 ./dark_scan.py
 ```
+
+
 <!-- Requires python 3 and scapy. -->
 
 <!-- Tested on Kali.<br/> -->
