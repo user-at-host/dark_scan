@@ -18,9 +18,10 @@ apt update && apt install tor
 ```sh
 git clone https://github.com/gsv-gh/dark_scan.git
 ```
-3. Run dark_scan.py
+3. Execute dark_scan.py
 ```sh
 cd dark_scan
+
 ./dark_scan.py
 ```
 <!-- Requires python 3 and scapy. -->
