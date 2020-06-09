@@ -1,14 +1,29 @@
 # dark_scan
 WORK IN PROGRESS
 
-A port scanner that uses the Tor network to scan target hosts.<br/>
-Make sure that Tor service is installed.<br/>
+## About the Project
+Dark scan is a port scanner that uses the Tor network to scan traget hosts.<br/>
+The connection to Tor network is done automatically without user intercation.<br/>
+In addition to port scanning, Dark scan can also resolve URLs and discover hosts on<br/>
+the local network using ARP discovery.
+<!-- A port scanner that uses the Tor network to scan target hosts.<br/> -->
 
-    apt install tor
+## Instalation
 
-Requires python 3 and scapy.
+1. Install Tor service<br/>
 
-Tested on Kali.<br/>
+    apt update && apt install tor
+
+2. Clone the repository<br/>
+
+    git clone https://github.com/gsv-gh/dark_scan.git
+
+<!-- Requires python 3 and scapy. -->
+
+<!-- Tested on Kali.<br/> -->
+
+## Usage
+
 Execute as root or with sudo.
 
     Usage: dark_scan.py [OPTIONS]...
