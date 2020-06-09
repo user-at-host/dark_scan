@@ -11,13 +11,13 @@ the local network using ARP discovery.
 ## Instalation
 
 1. Install Tor service<br/>
-
-    apt update && apt install tor
-
+```sh
+apt update && apt install tor
+```
 2. Clone the repository<br/>
-
-    git clone https://github.com/gsv-gh/dark_scan.git
-
+```sh
+git clone https://github.com/gsv-gh/dark_scan.git
+```
 <!-- Requires python 3 and scapy. -->
 
 <!-- Tested on Kali.<br/> -->
