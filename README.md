@@ -11,15 +11,15 @@ the local network using ARP discovery.<br/>
 ## Instalation
 
 1. Install Tor service<br/>
-```sh
+```bash
 # apt update && apt install tor
 ```
 2. Clone the repository<br/>
-```sh
+```bash
 # git clone https://github.com/gsv-gh/dark_scan.git
 ```
 3. Set execution permissions and run the scanner
-```sh
+```bash
 # cd dark_scan
 
 # chmod u+x dark_scan.py
