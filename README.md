@@ -2,10 +2,10 @@
 WORK IN PROGRESS
 
 ## About the Project
-Dark scan is a port scanner that uses the Tor network to scan target hosts.<br/>
+Dark scan is a port scanner that uses the Tor network to scan targets.<br/>
 The connection to Tor network is done automatically without user interaction.<br/>
 In addition to port scanning, Dark scan can also resolve URLs and discover hosts on<br/>
-the local network using ARP discovery.<br/>
+the local network using ARP scanning.<br/>
 <!-- A port scanner that uses the Tor network to scan target hosts.<br/> -->
 
 ## Instalation
