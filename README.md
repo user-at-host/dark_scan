@@ -1,7 +1,7 @@
 # dark_scan
 WORK IN PROGRESS  
 This is a very old project I once worked on. It did not recieve any updates for about 5 years.
-Now I decided to reincarnate this project so updates are expected.
+Now I decided to reincarnate it, so updates are expected.
 
 ## About the Project
 Dark scan is a port scanner that uses the Tor network to scan targets.<br/>
