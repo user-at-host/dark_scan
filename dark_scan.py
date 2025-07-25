@@ -241,7 +241,7 @@ def print_results(open_ports, scanned_ports, protocol):
 		print("Found %d open ports" % (len(open_ports)))
 
 
-def check_ipv4_address(address) -> bool:
+def check_ipv4_address(address: str) -> bool:
 	"""
 	The function checks if the given IPv4 address is valid.
 	:param address: The IPv4 address to check.
@@ -250,8 +250,14 @@ def check_ipv4_address(address) -> bool:
 
 	pattern = r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
 
+	LOGGER.debug(f"Check the IPv4 address {address}")
+
 	if search(pattern, address):
+		LOGGER.debug(f"The address {address} matches the pattern {pattern}")
+
 		return True
+
+	LOGGER.debug(f"The address {address} does not match the pattern {pattern}")
 
 	return False
 
