@@ -26,7 +26,7 @@ def parse_arguments() -> Namespace:
 	parser = ArgumentParser()
 
 	parser.add_argument("-t", "--target", type=str, help="Target IP address")
-	parser.add_argument("-p", "--ports", type=str, help="Port/s to scan")
+	parser.add_argument("-p", "--ports", type=str, help="Port/s to scan. Supports the following formats: PORT or PORT_FROM-PORT_TO or PORT,PORT...")
 
 	return parser.parse_args()
 
@@ -92,17 +92,25 @@ def check_ports(ports: str) -> bool:
 	port_pattern = r"(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[0-5]?[0-9]{1,4})"
 
 	if search(rf"^{port_pattern}$", ports):
-		return True
+		LOGGER.debug(f"The port {ports} matches the pattern {port_pattern}")
+
+		return int(ports) != 0
 
 	dash_pattern = rf"^{port_pattern}-{port_pattern}$"
 
 	if search(dash_pattern, ports):
+		LOGGER.debug(f"The ports {ports} matches the pattern {dash_pattern}")
+
 		return True
 
-	comma_pattern = rf"^({port_pattern}\,?)+"
+	comma_pattern = rf"^({port_pattern}\,)+{port_pattern}$"
 
 	if search(comma_pattern, ports):
+		LOGGER.debug(f"The ports {ports} matches the pattern {comma_pattern}")
+
 		return True
+
+	LOGGER.debug(f"The port/s {ports} does not match any pattern")
 
 	return False
 
