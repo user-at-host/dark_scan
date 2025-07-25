@@ -1,40 +1,30 @@
-#!/usr/bin/python3
-'''
-TODO:
-	- Add time counter
-	- Add banner grabbing
-	- Add OS discovery
-	- Check if Tor service is installed
-DONE:
-	- Add host discovery on local network.
-	- Add argument parsing.
-	- Resolve URLs to IP address.
-	- Parse port ranges
-	- Add resolve host option
-	- Improve speed
-	- Add scanning using TOR
-	- Check if Tor service is running
-	- Add check for valid IP addresses
-	- Check UID
-	- Grab local IPs and interfaces
-'''
+#!/usr/bin/env python3
+
 
 import socks
-import socket
-from os import system
-from os import getuid
+
 from re import search
 from sys import argv
 from time import sleep
 from random import randint
-from subprocess import run
-from subprocess import PIPE
+from argparse import ArgumentParser, Namespace
+from subprocess import run, PIPE
+
 from scapy.all import *
 
 TIMEOUT = 2
 BLOCK_SIZE = 100
 
-def parse_arguments():
+def parse_arguments() -> Namespace:
+	parser = ArgumentParser()
+
+	parser.add_argument("-t", "--target", type=str, help="Target IP address")
+	parser.add_argument("-p", "--ports", type=str, help="Port/s to scan")
+
+	return parser.parse_args()
+
+
+def parse_arguments_old():
 	args = {}
 	skip = 0
 
@@ -265,13 +255,6 @@ def start_tor_service():
 	return process.returncode
 
 
-def check_uid():
-	if getuid() != 0:
-		return False
-	else:
-		return True
-
-
 def get_local_ip_addresses():
 	output = run(['ip', 'a'], capture_output = True)
 	pattern = "^127\\."
@@ -298,11 +281,6 @@ def get_local_ip_addresses():
 
 
 def main():
-	if not check_uid():
-		print("Error: Should be executed as root/sudo")
-
-		exit(1)
-
 	args = parse_arguments()
 
 	if "resolve" in args:
