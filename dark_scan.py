@@ -16,7 +16,7 @@ from scapy.all import *
 TIMEOUT = 2
 BLOCK_SIZE = 100
 
-FORMAT = '%(asctime)s %(message)s'
+FORMAT = '%(asctime)s %(levelname)s %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 
 LOGGER = logging.getLogger()
@@ -87,17 +87,19 @@ def check_ports(ports: str) -> bool:
 	:return: True if the given ports correct, else False
 	"""
 
-	port_pattern = r"^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[0-5]?[0-9]{1,4})$"
+	LOGGER.debug(f"Checking port\s: {ports}")
 
-	if search(port_pattern, ports):
+	port_pattern = r"(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[0-5]?[0-9]{1,4})"
+
+	if search(rf"^{port_pattern}$", ports):
 		return True
 
-	dash_pattern = rf"{port_pattern}-{port_pattern}"
+	dash_pattern = rf"^{port_pattern}-{port_pattern}$"
 
 	if search(dash_pattern, ports):
 		return True
 
-	comma_pattern = rf"({port_pattern}\,?)+"
+	comma_pattern = rf"^({port_pattern}\,?)+"
 
 	if search(comma_pattern, ports):
 		return True
