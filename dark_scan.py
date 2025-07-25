@@ -2,6 +2,7 @@
 
 
 import socks
+import logging
 
 from re import search
 from sys import argv, stdout
@@ -14,6 +15,12 @@ from scapy.all import *
 
 TIMEOUT = 2
 BLOCK_SIZE = 100
+
+FORMAT = '%(asctime)s %(message)s'
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+
+LOGGER = logging.getLogger()
+
 
 def parse_arguments() -> Namespace:
 	parser = ArgumentParser()
@@ -73,7 +80,13 @@ def parse_arguments_old():
 	return args
 
 
-def check_ports(ports) -> bool:
+def check_ports(ports: str) -> bool:
+	"""
+	Checks the provided ports for correctness.
+	:param ports: The given ports as a string
+	:return: True if the given ports correct, else False
+	"""
+
 	port_pattern = r"^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[0-5]?[0-9]{1,4})$"
 
 	if search(port_pattern, ports):
