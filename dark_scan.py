@@ -250,7 +250,7 @@ def check_ipv4_address(address: str) -> bool:
 
 	pattern = r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
 
-	LOGGER.debug(f"Check the IPv4 address {address}")
+	LOGGER.debug(f"Checking the IPv4 address {address}")
 
 	if search(pattern, address):
 		LOGGER.debug(f"The address {address} matches the pattern {pattern}")
