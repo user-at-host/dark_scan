@@ -4,7 +4,7 @@
 import socks
 
 from re import search
-from sys import argv
+from sys import argv, stdout
 from time import sleep
 from random import randint
 from argparse import ArgumentParser, Namespace
@@ -199,25 +199,19 @@ def print_results(open_ports, scanned_ports, protocol):
 		print("Found %d open ports" % (len(open_ports)))
 
 
-def check_address(address):
-	pattern = "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$"
+def check_ipv4_address(address) -> bool:
+	"""
+	The function checks if the given IPv4 address is valid.
+	:param address: The IPv4 address to check.
+	:return: True if address is valid, else False.
+	"""
+
+	pattern = r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
 
 	if search(pattern, address):
-		pattern = "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
-		pattern += "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
-		pattern += "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
-		pattern += "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+		return True
 
-		if search(pattern, address):
-			return address
-		else:
-			print("Invalid target: %s" % (address))
-
-			exit(1)
-	else:
-		address = resolve_address(address)
-
-		return address
+	return False
 
 
 def resolve_address(url):
@@ -283,6 +277,12 @@ def get_local_ip_addresses():
 def main():
 	args = parse_arguments()
 
+	if check_ipv4_address(args.target):
+		target = args.target
+	else:
+		print(f"Error: The address {args.target} is not a valid IPv4 address", file=stdout)
+
+	'''
 	if "resolve" in args:
 		address = resolve_address(args["target"])
 		print("Address: %s" % (address))
@@ -319,6 +319,7 @@ def main():
 			open_ports, scanned_ports = tcp_syn_scan(target, ports)
 
 		print_results(open_ports, scanned_ports, "TCP")
+	'''
 
 
 if __name__ == "__main__":
