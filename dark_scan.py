@@ -73,6 +73,25 @@ def parse_arguments_old():
 	return args
 
 
+def check_ports(ports) -> bool:
+	port_pattern = r"^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[0-5]?[0-9]{1,4})$"
+
+	if search(port_pattern, ports):
+		return True
+
+	dash_pattern = rf"{port_pattern}-{port_pattern}"
+
+	if search(dash_pattern, ports):
+		return True
+
+	comma_pattern = rf"({port_pattern}\,?)+"
+
+	if search(comma_pattern, ports):
+		return True
+
+	return False
+
+
 def parse_ports(ports):
 	if '-' in ports:
 		ports = list(range(int(ports.split('-')[0]), int(ports.split('-')[1]) + 1))
@@ -281,6 +300,15 @@ def main():
 		target = args.target
 	else:
 		print(f"Error: The address {args.target} is not a valid IPv4 address", file=stdout)
+
+		exit(1)
+
+	if check_ports(args.ports):
+		ports = args.ports
+	else:
+		print(f"Error: The port/s {args.ports} not valid", file=stdout)
+
+		exit(1)
 
 	'''
 	if "resolve" in args:
