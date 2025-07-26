@@ -37,7 +37,7 @@ def set_log_level(log_level: str) -> None:
 		LOGGER.setLevel(logging.INFO)
 	elif log_level.lower() == "warning":
 		LOGGER.setLevel(logging.WARNING)
-	elif log_level.lower() == "ERROR":
+	elif log_level.lower() == "error":
 		LOGGER.setLevel(logging.ERROR)
 	else:
 		LOGGER.error(f"Invalid log level {log_level}")
