@@ -330,14 +330,14 @@ def main():
 	if check_ipv4_address(args.target):
 		target = args.target
 	else:
-		print(f"Error: The address {args.target} is not a valid IPv4 address", file=stdout)
+		LOGGER.error(f"Error: The address {args.target} is not a valid IPv4 address")
 
 		exit(1)
 
 	if check_ports(args.ports):
 		ports = args.ports
 	else:
-		print(f"Error: The port/s {args.ports} not valid", file=stdout)
+		LOGGER.error(f"Error: The port/s {args.ports} not valid")
 
 		exit(1)
 
