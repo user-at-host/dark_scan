@@ -310,7 +310,7 @@ def start_tor(bootstrap_timeout: int = 60) -> Popen[str]:
 	:return: The object of the Tor process.
 	"""
 
-	cmd = f"{join(dirname(abspath(__file__)), 'tor/src/app/tor')}"
+	cmd = f"{join(dirname(abspath(__file__)), 'tor/tor')}"
 
 	LOGGER.info("Starting new Tor process")
 	LOGGER.debug(f"Executing command {cmd}")
