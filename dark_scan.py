@@ -204,7 +204,14 @@ def generate_port_chunks(ports):
 	return port_chunks
 
 
-def tor_scan(target, ports):
+def tor_scan(target: str, ports: list) -> tuple[list, int]:
+	"""
+	Scans the provided ports and returns a tuple with scan results.
+	:param target: The IP address to be scanned
+	:param ports: A list containing the ports to be scanned
+	:return: A tuple with scan results
+	"""
+
 	open_ports = []
 	scanned_ports = 0
 
