@@ -14,7 +14,7 @@ There is no need to install/configure anything on the host system.
 The connection to the Tor network is done automatically without user interaction.<br/>
 
 
-## Instalation
+## Installation
 
 WILL BE ADDED SOON
 
