@@ -116,10 +116,12 @@ def check_ports(ports: str) -> bool:
 
 
 def parse_ports(ports):
-	if '-' in ports:
+	if "-" in ports:
 		ports = list(range(int(ports.split('-')[0]), int(ports.split('-')[1]) + 1))
 
 		return ports
+	elif "," in ports:
+		return ports.split(",")
 	else:
 		return [int(ports)]
 
