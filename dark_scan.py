@@ -335,7 +335,7 @@ def main():
 		exit(1)
 
 	if check_ports(args.ports):
-		ports = args.ports
+		ports = parse_ports(args.ports)
 	else:
 		LOGGER.error(f"Error: The port/s {args.ports} not valid")
 
