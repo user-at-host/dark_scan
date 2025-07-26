@@ -19,9 +19,30 @@ TIMEOUT = 2
 BLOCK_SIZE = 100
 
 FORMAT = '%(asctime)s %(levelname)s %(message)s'
-logging.basicConfig(format=FORMAT, level=logging.DEBUG)
+logging.basicConfig(format=FORMAT)
 
 LOGGER = logging.getLogger()
+
+
+def set_log_level(log_level: str) -> None:
+	"""
+	Sets the log level
+	:param log_level: The log level as a string. Either lower or upper case.
+	:return: None
+	"""
+
+	if log_level.lower() == "debug":
+		LOGGER.setLevel(logging.DEBUG)
+	elif log_level.lower() == "info":
+		LOGGER.setLevel(logging.INFO)
+	elif log_level.lower() == "warning":
+		LOGGER.setLevel(logging.WARNING)
+	elif log_level.lower() == "ERROR":
+		LOGGER.setLevel(logging.ERROR)
+	else:
+		LOGGER.error(f"Invalid log level {log_level}")
+
+		exit(1)
 
 
 def parse_arguments() -> Namespace:
@@ -30,6 +51,7 @@ def parse_arguments() -> Namespace:
 	parser.add_argument("-t", "--target", type=str, required=True, help="Target IP address")
 	parser.add_argument("-p", "--ports", type=str, required=True, help="Port/s to scan. Supports the following formats: PORT or PORT_FROM-PORT_TO or PORT,PORT...")
 	parser.add_argument("-s", "--start-tor", action="store_true", help="Start new Tor connection. Assumes Tor is not running")
+	parser.add_argument("--log-level", type=str, default="info", help="Log level")
 
 	return parser.parse_args()
 
@@ -378,6 +400,8 @@ def main():
 	tor_process = None
 
 	args = parse_arguments()
+
+	set_log_level(args.log_level)
 
 	if check_ipv4_address(args.target):
 		target = args.target
