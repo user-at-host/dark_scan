@@ -4,7 +4,7 @@ Now I decided to reincarnate it, so updates are expected.
 
 <br>
 
-This is 100% human code. *No* vibe coding or AI written code.
+This is 100% human code. **No** vibe coding or AI written code.
 
 ## About the Project
 
