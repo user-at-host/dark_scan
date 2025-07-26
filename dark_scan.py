@@ -25,8 +25,8 @@ LOGGER = logging.getLogger()
 def parse_arguments() -> Namespace:
 	parser = ArgumentParser()
 
-	parser.add_argument("-t", "--target", type=str, help="Target IP address")
-	parser.add_argument("-p", "--ports", type=str, help="Port/s to scan. Supports the following formats: PORT or PORT_FROM-PORT_TO or PORT,PORT...")
+	parser.add_argument("-t", "--target", type=str, required=True, help="Target IP address")
+	parser.add_argument("-p", "--ports", type=str, required=True, help="Port/s to scan. Supports the following formats: PORT or PORT_FROM-PORT_TO or PORT,PORT...")
 
 	return parser.parse_args()
 
