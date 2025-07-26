@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
 
+import time
 import socks
 import logging
 
+from os.path import abspath, dirname, join
+
 from re import search
 from sys import argv, stdout
-from time import sleep
 from random import randint
 from argparse import ArgumentParser, Namespace
-from subprocess import run, PIPE
+from subprocess import Popen, PIPE
 
 from scapy.all import *
 
@@ -27,6 +29,7 @@ def parse_arguments() -> Namespace:
 
 	parser.add_argument("-t", "--target", type=str, required=True, help="Target IP address")
 	parser.add_argument("-p", "--ports", type=str, required=True, help="Port/s to scan. Supports the following formats: PORT or PORT_FROM-PORT_TO or PORT,PORT...")
+	parser.add_argument("-s", "--start-tor", action="store_true", help="Start new Tor connection. Assumes Tor is not running")
 
 	return parser.parse_args()
 
@@ -300,10 +303,50 @@ def check_tor_service():
 		exit(1)
 
 
-def start_tor_service():
-	process = run(args = ['service', 'tor', 'start'], stdout = PIPE)
+def start_tor(bootstrap_timeout: int = 60) -> Popen[str]:
+	"""
+	Starts a new Tor process
+	:param bootstrap_timeout: The timeout for the bootstrap process. Default: 20 seconds.
+	:return: The object of the Tor process.
+	"""
 
-	return process.returncode
+	cmd = f"{join(dirname(abspath(__file__)), 'tor/src/app/tor')}"
+
+	LOGGER.info("Starting new Tor process")
+	LOGGER.debug(f"Executing command {cmd}")
+
+	process = Popen(cmd, stdout=PIPE, text=True, bufsize=1)
+
+	LOGGER.info("Waiting for Tor bootstrap process to complete")
+
+	bootstrap_complete = False
+	bootstrap_start_time = time.time()
+
+	for line in process.stdout:
+		LOGGER.debug(f"{line}")
+
+		if "Bootstrapped 100% (done)" in line:
+			LOGGER.info("Tor bootstrap completed")
+
+			bootstrap_complete = True
+
+			break
+
+		if time.time() - bootstrap_timeout > bootstrap_start_time:
+			LOGGER.error("Tor process bootstrap timeout reached. Exiting.")
+
+			process.terminate()
+
+			exit(1)
+
+	if not bootstrap_complete:
+		LOGGER.error("Tor process failed to start, see logs for more information. Exiting.")
+
+		process.terminate()
+
+		exit(1)
+
+	return process
 
 
 def get_local_ip_addresses():
@@ -332,6 +375,8 @@ def get_local_ip_addresses():
 
 
 def main():
+	tor_process = None
+
 	args = parse_arguments()
 
 	if check_ipv4_address(args.target):
@@ -347,6 +392,13 @@ def main():
 		LOGGER.error(f"Error: The port/s {args.ports} not valid")
 
 		exit(1)
+
+	if args.start_tor:
+		tor_process = start_tor()
+
+	print(tor_scan(target, ports))
+
+	tor_process.terminate()
 
 	'''
 	if "resolve" in args:
