@@ -23,7 +23,7 @@ logging.basicConfig(format=FORMAT)
 
 LOGGER = logging.getLogger()
 
-
+# Some comment for test
 def set_log_level(log_level: str) -> None:
 	"""
 	Sets the log level
